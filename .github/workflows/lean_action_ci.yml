@@ -1,14 +1,24 @@
+
 name: Lean Action CI
 
 on:
   push:
+    branches: [ main ]
   pull_request:
-  workflow_dispatch:
+    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
-      - uses: leanprover/lean-action@v1
+
+      - name: Set up Lean
+        uses: leanprover/lean-action@v1
+
+      - name: Lake update
+        run: lake update
+
+      - name: Lake build
+        run: lake build
+
