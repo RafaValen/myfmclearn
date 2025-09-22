@@ -5,19 +5,27 @@ variable (P Q R : Prop)
 
 ------------------------------------------------
 -- Double negation
-------------------------------------------------
+------------ ------------------------------------
 
 theorem doubleneg_intro :
     P → ¬ ¬ P  := by
-  sorry
-
+ intro hp
+ intro hnp
+ exact hnp hp
 theorem doubleneg_elim :
     ¬ ¬ P → P  := by
-  sorry
+  intro hnnP
+  apply Classical.byContradiction
+  exact hnnP
+
 
 theorem doubleneg_law :
     ¬ ¬ P ↔ P  := by
-  sorry
+    constructor
+    · exact doubleneg_elim P
+    · exact doubleneg_intro P
+
+
 
 
 ------------------------------------------------
@@ -26,11 +34,21 @@ theorem doubleneg_law :
 
 theorem disj_comm :
     (P ∨ Q) → (Q ∨ P)  := by
-  sorry
+  intro h
+  cases h with
+  | inl hp => exact Or.inr hp
+  | inr hq => exact Or.inl hq
 
-theorem conj_comm :
-    (P ∧ Q) → (Q ∧ P)  := by
-  sorry
+
+
+
+theorem conj_comm (P Q : Prop) : (P ∧ Q) → (Q ∧ P) := by
+  intro h
+  cases h with
+  | intro hp hq => exact ⟨hq, hp⟩
+
+
+
 
 
 ------------------------------------------------
@@ -39,12 +57,23 @@ theorem conj_comm :
 
 theorem impl_as_disj_converse :
     (¬ P ∨ Q) → (P → Q)  := by
-  sorry
+  intro h
+  intro hp
+  rcases h with
+  (h.left|h.right)
+  exfalso; exact h.left hp
+  exact h.right
+
+
+
 
 theorem disj_as_impl :
     (P ∨ Q) → (¬ P → Q)  := by
-  sorry
-
+  intro h
+  intro hnp
+  cases h with
+  | inl hp => exfalso; exact hnp hp
+  | inr hq => exact hq
 
 ------------------------------------------------
 -- Contrapositive
@@ -52,15 +81,24 @@ theorem disj_as_impl :
 
 theorem impl_as_contrapositive :
     (P → Q) → (¬ Q → ¬ P)  := by
-  sorry
+  intro h
+  intro hnq
+  intro hp
+  exact hnq (h hp)
 
 theorem impl_as_contrapositive_converse :
     (¬ Q → ¬ P) → (P → Q)  := by
-  sorry
+  intro h
+  intro hp
+  apply Classical.byContradiction
+  intro hnq
+  exact h hnq hp
 
 theorem contrapositive_law :
     (P → Q) ↔ (¬ Q → ¬ P)  := by
-  sorry
+  constructor
+  · exact impl_as_contrapositive P Q
+  · exact impl_as_contrapositive_converse P Q
 
 
 ------------------------------------------------
@@ -69,7 +107,13 @@ theorem contrapositive_law :
 
 theorem lem_irrefutable :
     ¬ ¬ (P ∨ ¬ P)  := by
-  sorry
+  intro h
+  apply h
+  right
+  intro hp
+  apply h
+  left
+  exact hp
 
 
 ------------------------------------------------
@@ -78,7 +122,13 @@ theorem lem_irrefutable :
 
 theorem peirce_law_weak :
     ((P → Q) → P) → ¬ ¬ P  := by
-  sorry
+  intro h
+  intro hnp
+  apply hnp
+  apply h
+  intro hp
+  exfalso
+  exact hnp hp
 
 
 ------------------------------------------------
@@ -87,7 +137,16 @@ theorem peirce_law_weak :
 
 theorem impl_linear :
     (P → Q) ∨ (Q → P)  := by
-  sorry
+    by_cases h : P
+    right
+    intro P
+    exact h
+    left
+    intro hq
+    exfalso
+    exact h hq
+
+
 
 
 ------------------------------------------------
@@ -96,11 +155,31 @@ theorem impl_linear :
 
 theorem disj_as_negconj :
     P ∨ Q → ¬ (¬ P ∧ ¬ Q)  := by
-  sorry
+  intro h
+  have hp := ¬ P ∧ ¬ Q → False
+  intro hnphnq
+  cases hnphnq with
+  | intro hnp hnq =>
+    cases h with
+    |inl hp => exfalso; exact hnp hp
+    |inr hq => exfalso; exact hnq hq
+
 
 theorem conj_as_negdisj :
     P ∧ Q → ¬ (¬ P ∨ ¬ Q)  := by
-  sorry
+  intro h
+  have hp := ¬ P ∨ ¬ Q → False
+  intro hnpnq
+  cases hnpnq with
+  | inl hnp => exfalso; exact hnp h.left
+  | inr hnq => exfalso; exact hnq h.right
+
+
+
+
+
+
+
 
 
 ------------------------------------------------
@@ -109,15 +188,39 @@ theorem conj_as_negdisj :
 
 theorem demorgan_disj :
     ¬ (P ∨ Q) → (¬ P ∧ ¬ Q)  := by
-  sorry
+     intro   h
+     constructor
+     · intro hp
+       exact h (Or.inl hp)
+     · intro hq
+       exact h (Or.inr hq)
+
+
 
 theorem demorgan_disj_converse :
     (¬ P ∧ ¬ Q) → ¬ (P ∨ Q)  := by
-  sorry
+  intro h
+  intro hpq
+  cases hpq with
+  | inl hp => exact h.left hp
+  | inr hq => exact h.right hq
 
-theorem demorgan_conj :
-    ¬ (P ∧ Q) → (¬ Q ∨ ¬ P)  := by
-  sorry
+theorem demorgan_conj (P Q : Prop) :
+    ¬ (P ∧ Q) → (¬ Q ∨ ¬ P) := by
+  intro h
+  by_cases hq : Q
+  · right
+    intro hp
+    apply h
+    exact ⟨hp, hq⟩
+  · left
+    exact hq
+
+
+
+
+
+
 
 theorem demorgan_conj_converse :
     (¬ Q ∨ ¬ P) → ¬ (P ∧ Q)  := by
